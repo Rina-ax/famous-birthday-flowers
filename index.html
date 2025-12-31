@@ -162,7 +162,7 @@ let timer = setInterval(()=>{
         animate();
 
         // ====== Cinematic Letter with wrapping ======
-        let letter = "To the birthday boy of my dreams, Happy birthdayy!! You're finally older than my grandfather, but I'll still love you. I will forever cherish the day that you, my safe place, were born. I wish you the sweetest and most heartfelt birthday, even if I can't be there to hug you, I'll do my part in celebrating by eating cake! Thank you for existing, here in my life. I'm so grateful and proud of the wonderful person you are. I love you more than I could ever express with words, so please, have the best birthday todayy and happy new years! Mwah, your sweet girl :)"  ;
+        let letter = "Happy birthday, my dear friend! Wishing you all the joy in the world.";
         let letterDiv = document.createElement('div');
         letterDiv.style.position = 'absolute';
         letterDiv.style.top = '10%';
@@ -181,4 +181,13 @@ let timer = setInterval(()=>{
             if(index < text.length){
                 element.innerHTML += text[index];
                 index++;
-                setTimeout(()=>typeLetter(text, element, in
+                setTimeout(()=>typeLetter(text, element, index), 100);
+            }
+        }
+
+        setTimeout(()=> { typeLetter(letter, letterDiv); }, 3000);
+    }
+},1000);
+</script>
+</body>
+</html>
