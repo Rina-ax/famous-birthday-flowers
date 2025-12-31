@@ -1,193 +1,154 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Happy Birthday!</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Birthday Snowdrops</title>
 <style>
-body, html {
-    margin: 0;
-    padding: 0;
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-    background: black;
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: black;
 }
-canvas { display:block; }
+canvas { display: block; }
 #countdown {
-    position: absolute;
-    top: 40%;
-    width: 100%;
-    text-align: center;
-    font-size: 60px;
-    color: lightgrey;
-    font-family: cursive;
+  position: absolute;
+  top: 40%;
+  width: 100%;
+  text-align: center;
+  font-size: 64px;
+  color: #ccc;
+  font-family: cursive;
+}
+#letter {
+  position: absolute;
+  top: 12%;
+  width: 60%;
+  left: 20%;
+  text-align: center;
+  color: white;
+  font-size: 26px;
+  font-family: cursive;
+  letter-spacing: 2px;
+  white-space: pre-wrap;
 }
 </style>
 </head>
 <body>
 <div id="countdown"></div>
+<div id="letter"></div>
 <canvas id="canvas"></canvas>
+
 <script>
-const canvas = document.getElementById('canvas');
-const ctx = canvas.getContext('2d');
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
+console.log("Script started");
 
-/* ================= SPARKLES ================= */
-let sparkles = Array.from({length:150},()=>({ x:Math.random()*canvas.width, y:Math.random()*canvas.height, r:Math.random()*1.5+0.4, a:Math.random()*Math.PI*2, v:Math.random()*0.015+0.003 }));
-let heartSparkles = Array.from({length:50},()=>({ x:Math.random()*canvas.width, y:Math.random()*canvas.height, r:Math.random()*4+2, a:Math.random()*Math.PI*2, v:Math.random()*0.02+0.005 }));
-function drawSparkles(){
-    sparkles.forEach(s => { s.a += s.v; ctx.fillStyle = `rgba(255,255,255,${0.35+Math.sin(s.a)*0.25})`; ctx.shadowColor = '#fff'; ctx.shadowBlur = 12; ctx.beginPath(); ctx.arc(s.x,s.y,s.r,0,Math.PI*2); ctx.fill(); });
-    heartSparkles.forEach(h => { h.a += h.v; ctx.fillStyle = `rgba(255,182,193,${0.4+Math.sin(h.a)*0.3})`; ctx.shadowColor = '#ffb6c1'; ctx.shadowBlur = 12; const r=h.r; ctx.beginPath(); ctx.moveTo(h.x, h.y - r/2); ctx.bezierCurveTo(h.x - r, h.y - r, h.x - r, h.y + r/2, h.x, h.y + r); ctx.bezierCurveTo(h.x + r, h.y + r/2, h.x + r, h.y - r, h.x, h.y - r/2); ctx.fill(); });
-}
+const LETTER_TEXT = `Happy birthday to the one man I'll always love.
+I hope this year brings you warmth, laughter,
+and many beautiful moments, spent together with people
+beloved to you. I'll forever cherish the day you
+were born and I'm equally grateful to have you.
+Thank you, birthday boy, for being my sweet place.`;
 
-/* ================= FIREWORKS ================= */
-class FireworkParticle {
-    constructor(x, y, angle, speed, color) {
-        this.x = x;
-        this.y = y;
-        this.angle = angle;
-        this.speed = speed;
-        this.color = color;
-        this.life = 60;
-    }
-    update() {
-        this.x += Math.cos(this.angle) * this.speed;
-        this.y += Math.sin(this.angle) * this.speed;
-        this.speed *= 0.95;
-        this.life--;
-    }
-    draw() {
-        ctx.fillStyle = this.color;
-        ctx.shadowColor = this.color;
-        ctx.shadowBlur = 12;
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, 3, 0, Math.PI*2);
-        ctx.fill();
-    }
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+const countdownEl = document.getElementById("countdown");
+const letterEl = document.getElementById("letter");
+
+function resizeCanvas() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
 }
-let fireworks=[];
-function spawnFirework(){
-    const sides = [0, canvas.width];
-    const x = sides[Math.floor(Math.random()*2)];
-    const y = Math.random() * canvas.height * 0.5;
-    const colors = ['#ff0000','#ff7f00','#ffff00','#00ff00','#0000ff','#4b0082','#9400d3','#ffffff'];
-    const color = colors[Math.floor(Math.random()*colors.length)];
-    for(let i=0;i<80;i++){
-        const angle = Math.random()*Math.PI*2;
-        const speed = Math.random()*4+2;
-        fireworks.push(new FireworkParticle(x, y, angle, speed, color));
+resizeCanvas();
+window.addEventListener("resize", resizeCanvas);
+
+// ===== COUNTDOWN =====
+let count = 10;
+countdownEl.textContent = count;
+const countdownTimer = setInterval(() => {
+  count--;
+  countdownEl.textContent = count;
+  if (count <= 0) {
+    clearInterval(countdownTimer);
+    countdownEl.style.display = "none";
+    startAnimation();
+  }
+}, 1000);
+
+// ===== LETTER TYPING EFFECT =====
+function typeLetter(text, el, speed = 80) {
+  let i = 0;
+  el.textContent = "";
+  function step() {
+    if (i < text.length) {
+      el.textContent += text[i];
+      i++;
+      setTimeout(step, speed);
     }
+  }
+  step();
 }
 
-/* ================= SNOWDROP FLOWER ================= */
-let growth = 0, sway = 0;
-const growthSpeed = 0.008;
-function drawStem(x0, y0, x1, y1, w, color) {
-    ctx.strokeStyle = color;
-    ctx.lineWidth = w;
-    ctx.lineCap = 'round';
-    ctx.shadowColor = color;
-    ctx.shadowBlur = 8;
-    ctx.beginPath();
-    ctx.moveTo(x0, y0);
-    ctx.quadraticCurveTo((x0+x1)/2 + Math.sin(sway)*8, y0-40, x1, y1);
-    ctx.stroke();
+// ===== SNOWDROPS =====
+let growth = 0;
+let sway = 0;
+
+function drawStem(x0, y0, x1, y1) {
+  ctx.strokeStyle = "#2f6f5f";
+  ctx.lineWidth = 4;
+  ctx.lineCap = "round";
+  ctx.beginPath();
+  ctx.moveTo(x0, y0);
+  ctx.quadraticCurveTo((x0 + x1) / 2 + Math.sin(sway) * 6, y0 - 40, x1, y1);
+  ctx.stroke();
 }
-function drawLeaf(x, y, angle, color) {
-    ctx.save();
-    ctx.translate(x, y);
-    ctx.rotate(angle);
-    ctx.fillStyle = color;
-    ctx.shadowColor = color;
-    ctx.shadowBlur = 6;
-    ctx.beginPath();
-    ctx.ellipse(0,0,18,8,0,0,Math.PI*2);
-    ctx.fill();
-    ctx.restore();
-}
+
 function drawSnowdrop(x, y, s) {
-    ctx.save();
-    ctx.translate(x, y);
-    ctx.scale(s, s);
-    ctx.shadowColor = '#fff';
-    ctx.shadowBlur = 15;
-    for(let i=0;i<5;i++){
-        ctx.rotate(Math.PI*2/5);
-        ctx.beginPath();
-        ctx.moveTo(0,0);
-        ctx.bezierCurveTo(-6,14,-4,28,0,38);
-        ctx.bezierCurveTo(4,28,6,14,0,0);
-        ctx.fillStyle = '#ffffff';
-        ctx.fill();
-        ctx.strokeStyle = 'rgba(200,200,200,0.25)';
-        ctx.stroke();
-    }
-    ctx.restore();
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.scale(s, s);
+  ctx.shadowColor = "white";
+  ctx.shadowBlur = 12;
+  for (let i = 0; i < 5; i++) {
+    ctx.rotate((Math.PI * 2) / 5);
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.bezierCurveTo(-6, 14, -4, 28, 0, 36);
+    ctx.bezierCurveTo(4, 28, 6, 14, 0, 0);
+    ctx.fillStyle = "white";
+    ctx.fill();
+  }
+  ctx.restore();
 }
+
 function drawBouquet() {
-    const cx = canvas.width/2, baseY = canvas.height*0.8, rootX = cx, rootY = baseY+40;
-    const branches = [{dx:-30,h:150},{dx:-15,h:170},{dx:0,h:190},{dx:15,h:170},{dx:30,h:150},{dx:-10,h:130},{dx:10,h:140}];
-    branches.forEach(b => {
-        const tipX = cx + b.dx + Math.sin(sway*2)*6;
-        const tipY = baseY - b.h*growth;
-        drawStem(rootX, rootY, tipX, tipY, 5, '#3a7d6f');
-        drawLeaf(tipX-6, tipY+25, -0.5, '#3a7d6f');
-        drawLeaf(tipX+6, tipY+30, 0.5, '#0b3d2e');
-        drawSnowdrop(tipX, tipY, 0.9);
-    });
+  const cx = canvas.width / 2;
+  const baseY = canvas.height * 0.8;
+  const rootY = baseY + 40;
+
+  const stems = [-40, -20, 0, 20, 40];
+  stems.forEach((dx, i) => {
+    const tipX = cx + dx;
+    const tipY = baseY - (140 + i * 10) * growth;
+    drawStem(cx, rootY, tipX, tipY);
+    drawSnowdrop(tipX, tipY, 0.9);
+  });
 }
 
-function animate(){
-    ctx.clearRect(0,0,canvas.width,canvas.height);
-    drawSparkles();
-    if(Math.random()<0.04) spawnFirework();
-    fireworks.forEach((f,i)=>{ f.update(); f.draw(); if(f.life<=0) fireworks.splice(i,1); });
-    if(growth<1) growth+=growthSpeed;
-    sway+=0.02;
-    drawBouquet();
-    requestAnimationFrame(animate);
+function animate() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  sway += 0.02;
+  if (growth < 1) growth += 0.004;
+  drawBouquet();
+  requestAnimationFrame(animate);
 }
 
-// ====== Countdown ======
-let countdown = document.getElementById('countdown');
-let count = 10; countdown.textContent = count;
-let timer = setInterval(()=>{
-    count--;
-    countdown.textContent = count;
-    if(count <= 0){
-        clearInterval(timer);
-        countdown.style.display = 'none';
-        animate();
-
-        // ====== Cinematic Letter with wrapping ======
-        let letter = "Happy birthday, my dear friend! Wishing you all the joy in the world.";
-        let letterDiv = document.createElement('div');
-        letterDiv.style.position = 'absolute';
-        letterDiv.style.top = '10%';
-        letterDiv.style.width = '60%';
-        letterDiv.style.margin = '0 auto';
-        letterDiv.style.textAlign = 'center';
-        letterDiv.style.color = 'white';
-        letterDiv.style.fontSize = '28px';
-        letterDiv.style.fontFamily = 'cursive';
-        letterDiv.style.letterSpacing = '2px';
-        letterDiv.style.wordWrap = 'break-word';
-        letterDiv.style.whiteSpace = 'pre-wrap';
-        document.body.appendChild(letterDiv);
-
-        function typeLetter(text, element, index = 0){
-            if(index < text.length){
-                element.innerHTML += text[index];
-                index++;
-                setTimeout(()=>typeLetter(text, element, index), 100);
-            }
-        }
-
-        setTimeout(()=> { typeLetter(letter, letterDiv); }, 3000);
-    }
-},1000);
+function startAnimation() {
+  animate();
+  setTimeout(() => typeLetter(LETTER_TEXT, letterEl), 2000);
+}
 </script>
 </body>
 </html>
