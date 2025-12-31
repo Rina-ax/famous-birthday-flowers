@@ -45,12 +45,13 @@ canvas { display: block; }
 <script>
 console.log("Script started");
 
-const LETTER_TEXT = `Happy birthday to the one man I'll always love.
+// ===== LETTER =====
+const LETTER_TEXT = `To my sweetest birthday boy, Happy birthday!
 I hope this year brings you warmth, laughter,
-and many beautiful moments, spent together with people
-beloved to you. I'll forever cherish the day you
-were born and I'm equally grateful to have you.
-Thank you, birthday boy, for being my sweet place.`;
+and many beautiful moments. I'll always cherish the day that
+you were born, and I'm equally grateful to have you with me every day.
+Despite being miles apart, thank you, for being my sweet place 
+Happy birthday and I love you.`;
 
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
@@ -137,11 +138,76 @@ function drawBouquet() {
   });
 }
 
+// ===== FIREWORKS & HEART SPARKLES =====
+let fireworks = [];
+let hearts = Array.from({ length: 40 }, () => ({
+  x: Math.random() * window.innerWidth,
+  y: Math.random() * window.innerHeight,
+  size: Math.random() * 6 + 4,
+  speed: Math.random() * 0.3 + 0.2,
+  phase: Math.random() * Math.PI * 2
+}));
+
+function spawnFirework() {
+  const x = Math.random() * canvas.width;
+  const y = Math.random() * canvas.height * 0.4;
+  const colors = ['#ffffff', '#ffd1dc', '#ffb6c1'];
+  for (let i = 0; i < 50; i++) {
+    fireworks.push({
+      x, y,
+      vx: Math.cos(Math.random() * Math.PI * 2) * (Math.random() * 2 + 1),
+      vy: Math.sin(Math.random() * Math.PI * 2) * (Math.random() * 2 + 1),
+      life: 60,
+      color: colors[Math.floor(Math.random() * colors.length)]
+    });
+  }
+}
+
+function drawHearts() {
+  hearts.forEach(h => {
+    h.phase += 0.02;
+    h.y -= h.speed;
+    if (h.y < -20) h.y = canvas.height + 20;
+    ctx.save();
+    ctx.translate(h.x, h.y + Math.sin(h.phase) * 4);
+    ctx.fillStyle = 'rgba(255,182,193,0.6)';
+    ctx.beginPath();
+    ctx.moveTo(0, -h.size / 2);
+    ctx.bezierCurveTo(-h.size, -h.size, -h.size, h.size / 2, 0, h.size);
+    ctx.bezierCurveTo(h.size, h.size / 2, h.size, -h.size, 0, -h.size / 2);
+    ctx.fill();
+    ctx.restore();
+  });
+}
+
+function drawFireworks() {
+  fireworks.forEach((f, i) => {
+    f.x += f.vx;
+    f.y += f.vy;
+    f.vx *= 0.96;
+    f.vy *= 0.96;
+    f.life--;
+    ctx.fillStyle = f.color;
+    ctx.shadowColor = f.color;
+    ctx.shadowBlur = 12;
+    ctx.beginPath();
+    ctx.arc(f.x, f.y, 2.5, 0, Math.PI * 2);
+    ctx.fill();
+    if (f.life <= 0) fireworks.splice(i, 1);
+  });
+}
+
 function animate() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   sway += 0.02;
   if (growth < 1) growth += 0.004;
+
+  if (Math.random() < 0.03) spawnFirework();
+
+  drawHearts();
+  drawFireworks();
   drawBouquet();
+
   requestAnimationFrame(animate);
 }
 
