@@ -14,181 +14,87 @@ body, html {
     background: black;
 }
 canvas { display:block; }
+#letterDiv {
+    position: absolute;
+    top: 10%;
+    width: 100%;
+    text-align: center;
+    color: white;
+    font-size: 24px;
+    font-family: cursive;
+}
+#countdown {
+    position: absolute;
+    top: 40%;
+    width: 100%;
+    text-align: center;
+    font-size: 60px;
+    color: lightgrey;
+    font-family: cursive;
+}
 </style>
 </head>
 <body>
+<div id="letterDiv"></div>
 <div id="countdown"></div>
 <canvas id="canvas"></canvas>
 <script>
+// ====== Write your letter here ======
+let letter = prompt("Write a little letter for your friend:");
+
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
-/* ================= SPARKLES ================= */
-let sparkles = Array.from({length:150},()=>({
-    x:Math.random()*canvas.width,
-    y:Math.random()*canvas.height,
-    r:Math.random()*1.5+0.4,
-    a:Math.random()*Math.PI*2,
-    v:Math.random()*0.015+0.003
-}));
+let letterDiv = document.getElementById('letterDiv');
+letterDiv.innerText = letter;
 
-/* ================= HEART SPARKLES ================= */
-let heartSparkles = Array.from({length:50},()=>({
-    x:Math.random()*canvas.width,
-    y:Math.random()*canvas.height,
-    r:Math.random()*4+2,
-    a:Math.random()*Math.PI*2,
-    v:Math.random()*0.02+0.005
-}));
+/* ================= SPARKLES ================= */
+let sparkles = Array.from({length:150},()=>({ x:Math.random()*canvas.width, y:Math.random()*canvas.height, r:Math.random()*1.5+0.4, a:Math.random()*Math.PI*2, v:Math.random()*0.015+0.003 }));
+let heartSparkles = Array.from({length:50},()=>({ x:Math.random()*canvas.width, y:Math.random()*canvas.height, r:Math.random()*4+2, a:Math.random()*Math.PI*2, v:Math.random()*0.02+0.005 }));
 
 function drawSparkles(){
-    sparkles.forEach(s => {
-        s.a += s.v;
-        ctx.fillStyle = `rgba(255,255,255,${0.35+Math.sin(s.a)*0.25})`;
-        ctx.shadowColor = '#fff';
-        ctx.shadowBlur = 12;
-        ctx.beginPath();
-        ctx.arc(s.x,s.y,s.r,0,Math.PI*2);
-        ctx.fill();
-    });
-    heartSparkles.forEach(h => {
-        h.a += h.v;
-        ctx.fillStyle = `rgba(255,182,193,${0.4+Math.sin(h.a)*0.3})`;
-        ctx.shadowColor = '#ffb6c1';
-        ctx.shadowBlur = 12;
-        ctx.beginPath();
-        // Draw heart shape
-        const r = h.r;
-        ctx.moveTo(h.x, h.y - r/2);
-        ctx.bezierCurveTo(h.x - r, h.y - r, h.x - r, h.y + r/2, h.x, h.y + r);
-        ctx.bezierCurveTo(h.x + r, h.y + r/2, h.x + r, h.y - r, h.x, h.y - r/2);
-        ctx.fill();
-    });
+    sparkles.forEach(s => { s.a += s.v; ctx.fillStyle = `rgba(255,255,255,${0.35+Math.sin(s.a)*0.25})`; ctx.shadowColor = '#fff'; ctx.shadowBlur = 12; ctx.beginPath(); ctx.arc(s.x,s.y,s.r,0,Math.PI*2); ctx.fill(); });
+    heartSparkles.forEach(h => { h.a += h.v; ctx.fillStyle = `rgba(255,182,193,${0.4+Math.sin(h.a)*0.3})`; ctx.shadowColor = '#ffb6c1'; ctx.shadowBlur = 12; const r=h.r; ctx.beginPath(); ctx.moveTo(h.x, h.y - r/2); ctx.bezierCurveTo(h.x - r, h.y - r, h.x - r, h.y + r/2, h.x, h.y + r); ctx.bezierCurveTo(h.x + r, h.y + r/2, h.x + r, h.y - r, h.x, h.y - r/2); ctx.fill(); });
 }
 
 /* ================= FIREWORKS ================= */
-class FireworkParticle {
-    constructor(x, y, angle, speed, color) {
-        this.x = x;
-        this.y = y;
-        this.angle = angle;
-        this.speed = speed;
-        this.color = color;
-        this.life = 60;
-    }
-    update() {
-        this.x += Math.cos(this.angle) * this.speed;
-        this.y += Math.sin(this.angle) * this.speed;
-        this.speed *= 0.95;
-        this.life--;
-    }
-    draw() {
-        ctx.fillStyle = this.color;
-        ctx.shadowColor = this.color;
-        ctx.shadowBlur = 12;
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, 3, 0, Math.PI*2);
-        ctx.fill();
-    }
-}
-
-let fireworks = [];
+class FireworkParticle { constructor(x, y, angle, speed, color) { this.x=x; this.y=y; this.angle=angle; this.speed=speed; this.color=color; this.life=60; } update(){ this.x+=Math.cos(this.angle)*this.speed; this.y+=Math.sin(this.angle)*this.speed; this.speed*=0.95; this.life--; } draw(){ ctx.fillStyle=this.color; ctx.shadowColor=this.color; ctx.shadowBlur=12; ctx.beginPath(); ctx.arc(this.x,this.y,3,0,Math.PI*2); ctx.fill(); } }
+let fireworks=[];
 function spawnFirework(){
-    const sides = [0, canvas.width];
-    const x = sides[Math.floor(Math.random()*2)];
-    const y = Math.random() * canvas.height * 0.5;
-    const colors = ['#ff0000','#ff7f00','#ffff00','#00ff00','#0000ff','#4b0082','#9400d3','#ffffff'];
-    const color = colors[Math.floor(Math.random()*colors.length)];
-    for(let i=0; i<80; i++){
-        const angle = Math.random()*Math.PI*2;
-        const speed = Math.random()*4+2;
-        fireworks.push(new FireworkParticle(x, y, angle, speed, color));
-    }
+    const sides=[0,canvas.width];
+    const x=sides[Math.floor(Math.random()*2)];
+    const y=Math.random()*canvas.height*0.5;
+    const colors=['#ff0000','#ff7f00','#ffff00','#00ff00','#0000ff','#4b0082','#9400d3','#ffffff'];
+    const color=colors[Math.floor(Math.random()*colors.length)];
+    for(let i=0;i<80;i++){ const angle=Math.random()*Math.PI*2; const speed=Math.random()*4+2; fireworks.push(new FireworkParticle(x,y,angle,speed,color)); }
 }
 
 /* ================= SNOWDROP FLOWER ================= */
 let growth=0, sway=0;
-const growthSpeed = 0.02;
-
-function drawStem(x0, y0, x1, y1, w, color){
-    ctx.strokeStyle=color;
-    ctx.lineWidth=w;
-    ctx.lineCap='round';
-    ctx.shadowColor=color;
-    ctx.shadowBlur=8;
-    ctx.beginPath();
-    ctx.moveTo(x0,y0);
-    ctx.quadraticCurveTo((x0+x1)/2 + Math.sin(sway)*8, y0-40, x1, y1);
-    ctx.stroke();
-}
-
-function drawLeaf(x, y, angle, color){
-    ctx.save();
-    ctx.translate(x,y);
-    ctx.rotate(angle);
-    ctx.fillStyle=color;
-    ctx.shadowColor=color;
-    ctx.shadowBlur=6;
-    ctx.beginPath();
-    ctx.ellipse(0,0,18,8,0,0,Math.PI*2);
-    ctx.fill();
-    ctx.restore();
-}
-
-function drawSnowdrop(x,y,s){
-    ctx.save(); ctx.translate(x,y); ctx.scale(s,s);
-    ctx.shadowColor='#fff'; ctx.shadowBlur=15;
-    for(let i=0;i<5;i++){
-        ctx.rotate(Math.PI*2/5);
-        ctx.beginPath();
-        ctx.moveTo(0,0);
-        ctx.bezierCurveTo(-6,14,-4,28,0,38);
-        ctx.bezierCurveTo(4,28,6,14,0,0);
-        ctx.fillStyle='#ffffff'; ctx.fill();
-        ctx.strokeStyle='rgba(200,200,200,0.25)'; ctx.stroke();
-    }
-    ctx.restore();
-}
-
+const growthSpeed=0.008;
+function drawStem(x0,y0,x1,y1,w,color){ ctx.strokeStyle=color; ctx.lineWidth=w; ctx.lineCap='round'; ctx.shadowColor=color; ctx.shadowBlur=8; ctx.beginPath(); ctx.moveTo(x0,y0); ctx.quadraticCurveTo((x0+x1)/2+Math.sin(sway)*8,y0-40,x1,y1); ctx.stroke(); }
+function drawLeaf(x,y,angle,color){ ctx.save(); ctx.translate(x,y); ctx.rotate(angle); ctx.fillStyle=color; ctx.shadowColor=color; ctx.shadowBlur=6; ctx.beginPath(); ctx.ellipse(0,0,18,8,0,0,Math.PI*2); ctx.fill(); ctx.restore(); }
+function drawSnowdrop(x,y,s){ ctx.save(); ctx.translate(x,y); ctx.scale(s,s); ctx.shadowColor='#fff'; ctx.shadowBlur=15; for(let i=0;i<5;i++){ ctx.rotate(Math.PI*2/5); ctx.beginPath(); ctx.moveTo(0,0); ctx.bezierCurveTo(-6,14,-4,28,0,38); ctx.bezierCurveTo(4,28,6,14,0,0); ctx.fillStyle='#ffffff'; ctx.fill(); ctx.strokeStyle='rgba(200,200,200,0.25)'; ctx.stroke(); } ctx.restore(); }
 function drawBouquet(){
-    const cx = canvas.width/2;
-    const baseY = canvas.height*0.8;
-    const rootX = cx;
-    const rootY = baseY+40;
-    const branches = [
-        {dx:-30,h:150},
-        {dx:-15,h:170},
-        {dx:0,h:190},
-        {dx:15,h:170},
-        {dx:30,h:150},
-        {dx:-10,h:130},
-        {dx:10,h:140}
-    ];
-    branches.forEach(b => {
-        const tipX = cx + b.dx + Math.sin(sway*2)*6;
-        const tipY = baseY - b.h*growth;
-        drawStem(rootX, rootY, tipX, tipY, 5, '#3a7d6f');
-        drawLeaf(tipX-6, tipY+25, -0.5, '#3a7d6f');
-        drawLeaf(tipX+6, tipY+30, 0.5, '#0b3d2e');
-        drawSnowdrop(tipX, tipY, 0.9);
-    });
+    const cx=canvas.width/2, baseY=canvas.height*0.8, rootX=cx, rootY=baseY+40;
+    const branches=[{dx:-30,h:150},{dx:-15,h:170},{dx:0,h:190},{dx:15,h:170},{dx:30,h:150},{dx:-10,h:130},{dx:10,h:140}];
+    branches.forEach(b=>{ const tipX=cx+b.dx+Math.sin(sway*2)*6; const tipY=baseY-b.h*growth; drawStem(rootX,rootY,tipX,tipY,5,'#3a7d6f'); drawLeaf(tipX-6,tipY+25,-0.5,'#3a7d6f'); drawLeaf(tipX+6,tipY+30,0.5,'#0b3d2e'); drawSnowdrop(tipX,tipY,0.9); });
 }
 
 function animate(){
     ctx.clearRect(0,0,canvas.width,canvas.height);
     drawSparkles();
     if(Math.random()<0.04) spawnFirework();
-    fireworks.forEach((f,i)=>{
-        f.update(); f.draw(); if(f.life<=0) fireworks.splice(i,1);
-    });
+    fireworks.forEach((f,i)=>{ f.update(); f.draw(); if(f.life<=0) fireworks.splice(i,1); });
     if(growth<1) growth+=growthSpeed;
     sway+=0.02;
     drawBouquet();
     requestAnimationFrame(animate);
 }
 
+// ====== Countdown with letter displayed ======
 let countdown=document.getElementById('countdown');
 let count=10; countdown.textContent=count;
 let timer=setInterval(()=>{
@@ -196,6 +102,7 @@ let timer=setInterval(()=>{
     if(count<=0){
         clearInterval(timer);
         countdown.style.display='none';
+        letterDiv.style.display='none'; // hide letter after countdown
         animate();
     }
 },1000);
