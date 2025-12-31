@@ -1,167 +1,155 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>TikTok Blooming Flowers</title>
+<meta charset="UTF-8">
+<title>TikTok Glow Flowers</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
-
-  <style>
-    body {
-      margin: 0;
-      background: black;
-      overflow: hidden;
-    }
-    canvas {
-      display: block;
-      margin: auto;
-    }
-  </style>
+<style>
+body {
+  margin: 0;
+  background: black;
+  overflow: hidden;
+}
+canvas {
+  display: block;
+  margin: auto;
+}
+</style>
 </head>
 
 <body>
 <script>
-let growth = 0;
-let bloom = 0;
-let t = 0;
-
+let flowers = [];
+let particles = [];
+let timerStart;
 let countdown = 10;
-let startTime;
-let showFlowers = false;
-
-let hearts = [];
 
 function setup() {
   createCanvas(400, 700);
   angleMode(RADIANS);
-  startTime = millis();
+  timerStart = millis();
 
-  // create hearts
-  for (let i = 0; i < 20; i++) {
-    hearts.push(new Heart());
+  // background sparkles
+  for (let i = 0; i < 120; i++) {
+    particles.push({
+      x: random(width),
+      y: random(height),
+      a: random(40, 120),
+      s: random(1, 2)
+    });
+  }
+
+  // flowers
+  for (let i = -1; i <= 1; i++) {
+    flowers.push(new Flower(i * 45, random(0, TWO_PI)));
   }
 }
 
 function draw() {
-  background(8, 10, 14);
+  background(6, 10, 14);
 
-  drawHearts();
+  drawParticles();
 
-  // countdown logic
-  let elapsed = floor((millis() - startTime) / 1000);
+  let elapsed = floor((millis() - timerStart) / 1000);
   countdown = max(10 - elapsed, 0);
 
   if (countdown > 0) {
-    drawCountdown(countdown);
+    drawCountdown();
   } else {
-    showFlowers = true;
-  }
-
-  if (showFlowers) {
-    drawFlowerScene();
+    translate(width / 2, height - 90);
+    drawGrass();
+    for (let f of flowers) f.update();
   }
 }
 
-/* ---------------- HEARTS ---------------- */
-
-class Heart {
-  constructor() {
-    this.reset();
+/* ---------- PARTICLES ---------- */
+function drawParticles() {
+  noStroke();
+  for (let p of particles) {
+    fill(180, 220, 200, p.a);
+    circle(p.x, p.y, p.s);
   }
+}
 
-  reset() {
-    this.x = random(width);
-    this.y = random(height, height + 200);
-    this.size = random(10, 20);
-    this.speed = random(0.3, 1);
-    this.alpha = random(80, 150);
+/* ---------- COUNTDOWN ---------- */
+function drawCountdown() {
+  textAlign(CENTER, CENTER);
+  textSize(72);
+  fill(200, 200, 200, 180);
+  drawingContext.shadowBlur = 25;
+  drawingContext.shadowColor = "rgba(200,200,200,0.6)";
+  text(countdown, width / 2, height / 2);
+}
+
+/* ---------- FLOWER CLASS ---------- */
+class Flower {
+  constructor(x, phase) {
+    this.x = x;
+    this.phase = phase;
+    this.grow = 0;
+    this.bloom = 0;
   }
 
   update() {
-    this.y -= this.speed;
-    if (this.y < -50) this.reset();
-  }
-
-  display() {
     push();
-    translate(this.x, this.y);
-    noStroke();
-    fill(200, 200, 200, this.alpha);
+    translate(this.x, 0);
+
+    let sway = sin(frameCount * 0.01 + this.phase) * 0.15;
+    rotate(sway);
+
+    this.grow = min(this.grow + 0.7, 230);
+    stroke(110, 230, 160);
+    strokeWeight(3);
+    noFill();
     beginShape();
-    vertex(0, -this.size / 2);
-    bezierVertex(-this.size, -this.size, -this.size * 1.5, this.size / 3, 0, this.size);
-    bezierVertex(this.size * 1.5, this.size / 3, this.size, -this.size, 0, -this.size / 2);
-    endShape(CLOSE);
+    curveVertex(0, 0);
+    curveVertex(0, 0);
+    curveVertex(4, -this.grow / 2);
+    curveVertex(0, -this.grow);
+    curveVertex(0, -this.grow);
+    endShape();
+
+    if (this.grow > 200) {
+      this.bloom = min(this.bloom + 0.4, 28);
+      drawGlowFlower(0, -this.grow, this.bloom);
+    }
     pop();
   }
 }
 
-function drawHearts() {
-  for (let h of hearts) {
-    h.update();
-    h.display();
-  }
-}
-
-/* ---------------- COUNTDOWN ---------------- */
-
-function drawCountdown(num) {
-  push();
-  textAlign(CENTER, CENTER);
-  textSize(72);
-  fill(200, 200, 200, 180);
-
-  // glow
-  drawingContext.shadowBlur = 20;
-  drawingContext.shadowColor = "rgba(200,200,200,0.6)";
-
-  text(num, width / 2, height / 2);
-  pop();
-}
-
-/* ---------------- FLOWERS ---------------- */
-
-function drawFlowerScene() {
-  translate(width / 2, height - 80);
-
-  // sway
-  let sway = sin(t) * 0.2;
-  rotate(sway);
-
-  // grow stem
-  growth = min(growth + 1, 260);
-  stroke(90, 220, 150);
-  strokeWeight(6);
-  line(0, 0, 0, -growth);
-
-  if (growth >= 260) {
-    bloom = min(bloom + 0.6, 42);
-  }
-
-  drawFlower(0, -growth, bloom);
-
-  t += 0.02;
-}
-
-function drawFlower(x, y, size) {
+/* ---------- FLOWER DRAW ---------- */
+function drawGlowFlower(x, y, s) {
   push();
   translate(x, y);
 
-  noStroke();
-  for (let i = 0; i < 6; i++) {
-    let angle = TWO_PI / 6 * i;
-    let px = cos(angle) * size;
-    let py = sin(angle) * size;
-
-    fill(255, 130, 170, 190);
-    ellipse(px, py, size * 1.2, size * 0.8);
+  for (let g = 20; g > 0; g--) {
+    fill(255, 130, 160, 6);
+    circle(0, 0, s * g * 0.15);
   }
 
-  // glowing center
+  for (let i = 0; i < 5; i++) {
+    let a = TWO_PI / 5 * i;
+    let px = cos(a) * s;
+    let py = sin(a) * s * 0.7;
+    fill(255, 150, 180, 200);
+    ellipse(px, py, s * 1.1, s * 0.6);
+  }
+
   fill(255, 230, 180);
-  ellipse(0, 0, size * 0.7);
+  circle(0, 0, s * 0.6);
 
   pop();
+}
+
+/* ---------- GRASS ---------- */
+function drawGrass() {
+  stroke(90, 200, 140);
+  strokeWeight(2);
+  for (let i = -90; i <= 90; i += 10) {
+    let h = random(40, 80);
+    line(i, 0, i + random(-6, 6), -h);
+  }
 }
 </script>
 </body>
